@@ -13,17 +13,17 @@ layers = [base_model.get_layer(name).output for name in names]
 deep_dream_model = tf.keras.Model(inputs = base_model.input, outputs = layers)
 
 image = tf.keras.preprocessing.image.load_img('./content/neighborhood.jpg',
-                                              target_size=(225, 375))
-plt.imshow(image)
+                                              target_size=(330, 550))
+#plt.imshow(image)
 image = tf.keras.preprocessing.image.img_to_array(image)
-# image = image / 255
+image = image / 255
 image = tf.keras.applications.inception_v3.preprocess_input(image)
 
 image_batch = tf.expand_dims(image, axis = 0)
 
 activations = deep_dream_model.predict(image_batch)
 
-activations[0].shape, activations[1].shape
+#activations[0].shape, activations[1].shape
 
 def calculate_loss(image, network):
   image_batch = tf.expand_dims(image, axis = 0)
@@ -33,18 +33,7 @@ def calculate_loss(image, network):
   for act in activations:
     loss = tf.math.reduce_mean(act)
     losses.append(loss)
-
-  print(losses)
-  #print(np.shape(losses))
-  #print(tf.reduce_sum(losses))
-
   return tf.reduce_sum(losses)
-
-loss = calculate_loss(image, deep_dream_model)
-
-# Compare the activations with the pixels
-# Emphasize parts of the image
-# Change the pixels of the input image
 
 @tf.function
 def deep_dream(network, image, learning_rate):
@@ -67,12 +56,13 @@ def run_deep_dream(network, image, epochs, learning_rate):
   for epoch in range(epochs):
     loss, image = deep_dream(network, image, learning_rate)
 
-    if epoch % 9999 == 0:
+    # only display final result 
+    if epoch == epochs - 1:
       plt.figure(figsize=(12,12))
       plt.imshow(inverse_transform(image))
       plt.show()
-      print('Epoch {}, loss {}'.format(epoch, loss))
+      print(f'Epoch: {epoch}, loss: {loss}')
 
-run_deep_dream(network=deep_dream_model, image=image, epochs = 10000, learning_rate=0.01)
+run_deep_dream(network=deep_dream_model, image=image, epochs = 500, learning_rate=0.001)
 
 
